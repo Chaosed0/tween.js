@@ -118,13 +118,11 @@ TWEEN.Tween = function ( object ) {
 	var _onUpdateCallback = null;
 	var _onCompleteCallback = null;
 	var _onStopCallback = null;
+    var _loadOnStart = null;
 
-	// Set all starting values present on the target object
-	for ( var field in object ) {
-
-		_valuesStart[ field ] = parseFloat(object[field], 10);
-
-	}
+    if (typeof object == 'function') {
+        _loadOnStart = object;
+    }
 
 	this.to = function ( properties, duration ) {
 
@@ -166,6 +164,10 @@ TWEEN.Tween = function ( object ) {
 				_valuesEnd[ property ] = [ _object[ property ] ].concat( _valuesEnd[ property ] );
 
 			}
+
+            if (_loadOnStart !== null) {
+                _object = _loadOnStart.call(this);
+            }
 
 			_valuesStart[ property ] = _object[ property ];
 
