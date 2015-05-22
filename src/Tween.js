@@ -1,3 +1,53 @@
+/* Minivents library
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2013 Fabien Allouis O'Carroll
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+ * the Software, and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+ * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+var minivents = function (target){
+    var events = {}, empty = [];
+    target = target || this
+        /**
+         *  On: listen to events
+         */
+        target.on = function(type, func, ctx){
+            (events[type] = events[type] || []).push([func, ctx])
+        }
+    /**
+     *  Off: stop listening to event / specific callback
+     */
+    target.off = function(type, func){
+        type || (events = {})
+            var list = events[type] || empty,
+                i = list.length = func ? list.length : 0
+                    while(i--) func == list[i][0] && list.splice(i,1)
+    }
+    /** 
+     * Emit: send event, callbacks will be triggered
+     */
+    target.emit = function(type){
+        var args = empty.slice.call(arguments, 1),
+            list = events[type] || empty, i=0, j
+                while(j=list[i++]) j[0].apply(j[1], args)
+    };
+}
+
 /**
  * Tween.js - Licensed under the MIT license
  * https://github.com/sole/tween.js
@@ -113,12 +163,10 @@ TWEEN.Tween = function ( object ) {
 	var _easingFunction = TWEEN.Easing.Linear.None;
 	var _interpolationFunction = TWEEN.Interpolation.Linear;
 	var _chainedTweens = [];
-	var _onStartCallback = null;
-	var _onStartCallbackFired = false;
-	var _onUpdateCallback = null;
-	var _onCompleteCallback = null;
-	var _onStopCallback = null;
+	var _onStartFired = false;
     var _loadOnStart = null;
+
+    minivents(this);
 
     if (typeof object == 'function') {
         _loadOnStart = object;
@@ -144,7 +192,7 @@ TWEEN.Tween = function ( object ) {
 
 		_isPlaying = true;
 
-		_onStartCallbackFired = false;
+		_onStartFired = false;
 
 		_startTime = time !== undefined ? time : window.performance.now();
 		_startTime += _delayTime;
@@ -192,11 +240,7 @@ TWEEN.Tween = function ( object ) {
 		TWEEN.remove( this );
 		_isPlaying = false;
 
-		if ( _onStopCallback !== null ) {
-
-			_onStopCallback.call( _object );
-
-		}
+        this.emit('stop');
 
 		this.stopChainedTweens();
 		return this;
@@ -263,28 +307,28 @@ TWEEN.Tween = function ( object ) {
 
 	this.onStart = function ( callback ) {
 
-		_onStartCallback = callback;
+		this.on('start', callback);
 		return this;
 
 	};
 
 	this.onUpdate = function ( callback ) {
 
-		_onUpdateCallback = callback;
+        this.on('update', callback);
 		return this;
 
 	};
 
 	this.onComplete = function ( callback ) {
 
-		_onCompleteCallback = callback;
+        this.on('complete', callback);
 		return this;
 
 	};
 
 	this.onStop = function ( callback ) {
 
-		_onStopCallback = callback;
+        this.on('stop', callback);
 		return this;
 
 	};
@@ -299,16 +343,10 @@ TWEEN.Tween = function ( object ) {
 
 		}
 
-		if ( _onStartCallbackFired === false ) {
+		if ( _onStartFired === false ) {
 
-			if ( _onStartCallback !== null ) {
-
-				_onStartCallback.call( _object );
-
-			}
-
-			_onStartCallbackFired = true;
-
+            this.emit('start');
+			_onStartFired = true;
 		}
 
 		var elapsed = ( time - _startTime ) / _duration;
@@ -341,11 +379,7 @@ TWEEN.Tween = function ( object ) {
 
 		}
 
-		if ( _onUpdateCallback !== null ) {
-
-			_onUpdateCallback.call( _object, value );
-
-		}
+        this.emit('update');
 
 		if ( elapsed == 1 ) {
 
@@ -382,11 +416,7 @@ TWEEN.Tween = function ( object ) {
 
 			} else {
 
-				if ( _onCompleteCallback !== null ) {
-
-					_onCompleteCallback.call( _object );
-
-				}
+                this.emit('complete');
 
 				for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i++ ) {
 
