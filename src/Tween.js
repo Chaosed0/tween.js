@@ -379,7 +379,7 @@ TWEEN.Tween = function ( object ) {
 
 		}
 
-        this.emit('update');
+        this.emit('update', _object);
 
 		if ( elapsed == 1 ) {
 
