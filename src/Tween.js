@@ -249,9 +249,14 @@ TWEEN.Tween = function ( object ) {
 
 	};
 
-	this.chain = function () {
+	this.chain = function (tweens) {
 
-		_chainedTweens = arguments;
+        if ((Array.isArray && Array.isArray(tweens)) ||
+                Object.prototype.toString.call(tweens) === '[object Array]') {
+            _chainedTweens = tweens;
+        } else {
+            _chainedTweens = arguments;
+        }
 		return this;
 
 	};
