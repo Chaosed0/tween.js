@@ -46,7 +46,7 @@ var minivents = function (target){
             list = events[type] || empty, i=0, j
                 while(j=list[i++]) j[0].apply(j[1], args)
     };
-}
+};
 
 /**
  * Tween.js - Licensed under the MIT license
